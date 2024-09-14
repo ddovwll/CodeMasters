@@ -1,0 +1,123 @@
+﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@page "/addauthor"
+@using Core.Contracts
+@using Core.Models
+@inject NavigationManager Navigation
+@inject IAuthorService AuthorService
+
+<PageTitle>Контент Мастер Автор</PageTitle>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    h2 {
+        text-align: center;
+        font-size: 24px;
+        color: #333;
+    }
+
+    .form-container {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+        border: 1px solid #ccc;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    .buttons-container {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .btn {
+        background-color: #007BFF;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 10px;
+        transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+
+<h2>Добавление автора</h2>
+
+<div class="form-container">
+    <EditForm Model="@newAuthor" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>Имя</label>
+            <InputText @bind-Value="newAuthor.Name" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label>Биография</label>
+            <InputTextArea @bind-Value="newAuthor.Biography" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label>Словарный запас</label>
+            <InputTextArea @bind-Value="newAuthor.Vocabulary" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label>Специализация</label>
+            <InputText @bind-Value="newAuthor.Specialization" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label>Тон</label>
+            <InputText @bind-Value="newAuthor.Tone" class="form-control" />
+        </div>
+
+        <div class="buttons-container">
+            <button class="btn" type="submit">Добавить автора</button>
+            <button class="btn" type="button" @onclick="GoHome">Вернуться на главную</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+private AuthorModel newAuthor = new ();
+
+private async Task HandleValidSubmit()
+{
+    await AuthorService.AddAuthorAsync(newAuthor);
+    newAuthor = new();
+}
+
+private void GoHome()
+{
+Navigation.NavigateTo("/");
+}
+}

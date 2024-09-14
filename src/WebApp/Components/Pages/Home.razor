@@ -1,0 +1,212 @@
+﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@page "/"
+@using Core.Contracts
+@using Core.Models
+@inject NavigationManager Navigation
+@inject IAuthorService AuthorService
+
+
+<PageTitle>Контент Мастер</PageTitle>
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    /* Основной стиль страницы */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 24px;
+      color: #333;
+    }
+
+    /* Контейнер для списков */
+    .list-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      gap: 20px;
+    }
+
+    /* Стиль каждого списка */
+    .scrollable-list {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      max-height: 500px; /* Ограничение по высоте */
+      overflow-y: auto; /* Вертикальная прокрутка */
+      flex: 1;
+      border: 1px solid #ccc;
+    }
+
+    .scrollable-list h3 {
+      text-align: center;
+      margin: 0 0 15px 0;
+      font-size: 20px;
+      color: #555;
+    }
+
+    /* Стили для списка */
+    ul {
+      list-style-type: disc;
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .qwe {
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: #333;
+      cursor: pointer; /* Курсор в виде руки */
+      transition: background-color 0.3s, color 0.3s; /* Эффект плавного перехода */
+    }
+
+    /* Подсказка: изменения при наведении */
+    .qwe:hover {
+      background-color: #f0f0f0; /* Легкое выделение фона при наведении */
+      color: #007BFF; /* Изменение цвета текста */
+      text-decoration: underline; /* Подчеркивание текста при наведении */
+    }
+
+    /* Добавление иконки стрелки (используем псевдоэлемент ::before) */
+    .qwe::before {
+      content: '➔ '; /* Добавляем стрелку перед текстом */
+      color: #007BFF;
+      font-size: 16px;
+      margin-right: 10px;
+      transition: transform 0.3s; /* Плавная анимация */
+    }
+
+    /* Стили для полосы прокрутки */
+    .scrollable-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .scrollable-list::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 10px;
+    }
+
+    .scrollable-list::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+    }
+
+    /* Стили для кнопок */
+    .buttons-container {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .btn {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 0 10px;
+      transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #0056b3;
+    }
+
+  </style>
+</head>
+<body>
+
+<h2>Списки авторов</h2>
+
+<div class="list-container">
+    <!-- Первый список -->
+    <div class="scrollable-list">
+        <h3>Профили авторов</h3>
+        <ul>
+            @if (!authorsLoaded)
+            {
+                <li>Загрузка авторов</li>
+            }
+            else if (authors == null || !authors.Any())
+            {
+                <li>Список авторов пуст</li>
+            }
+            @if (authorsLoaded)
+                foreach (var author in authors)
+                {
+                    var auth = author;
+                    <li class="qwe" @onclick="() => ToArticle(auth)">@auth.Name</li>
+                }
+        </ul>
+    </div>
+
+    <!-- Второй список -->
+    <div class="scrollable-list">
+        <h3>Известные личности</h3>
+        <ul>
+            @if (famous != null && famous.Any())
+            {
+                foreach (var fame in famous)
+                {
+                    <li class="qwe" @onclick="() => ToArticle(fame)">@fame.Name</li>
+                }
+            }
+        </ul>
+    </div>
+</div>
+
+<!-- Контейнер для кнопок -->
+<div class="buttons-container">
+    <button class="btn" @onclick="ToNews">
+        Новости
+    </button>
+    <button class="btn" @onclick="ToAddAuthor">Добавить автора</button>
+    <button class="btn" @onclick="ToSavedArticles">Читать статьи</button>
+</div>
+</body>
+
+@code
+{
+    int skip = 0;
+    int take = 1000;
+    bool authorsLoaded = false;
+    List<AuthorModel> authors;
+    List<AuthorModel> famous;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authors = await AuthorService.GetAuthorsAsync(skip, take);
+        famous = await AuthorService.GetFamousAuthor();
+        authorsLoaded = true;
+    }
+
+    void ToNews()
+    {
+        Navigation.NavigateTo("/News", forceLoad: true);
+    }
+
+    void ToAddAuthor()
+    {
+        Navigation.NavigateTo("/addauthor", forceLoad: true);
+    }
+
+    void ToArticle(AuthorModel author)
+    {
+        Navigation.NavigateTo($"/article/{author.Id}");
+    }
+    
+    void ToSavedArticles()
+    {
+        Navigation.NavigateTo($"/savedarticles");
+    }
+}

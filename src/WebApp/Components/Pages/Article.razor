@@ -1,0 +1,231 @@
+﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@page "/article/{authorId:guid}"
+@using Core.Contracts
+@using Core.Enums
+@using Core.Models
+@inject IAuthorService AuthorService
+@inject IArticleService ArticleService
+@inject NavigationManager NavigationManager
+@inject ISavedArticleService SavedArticleService
+
+
+<h2>Информация об авторе</h2>
+
+<div class="container">
+    <!-- Левая часть: Информация об авторе -->
+    <div class="left-panel">
+        <div class="author-info">
+            <label>Имя автора</label>
+            <InputText @bind-Value="@author.Name" class="input-field" />
+            
+            <label>Биография</label>
+            <InputTextArea @bind-Value="@author.Biography" class="input-field" />
+            
+            <label>Словарный запас</label>
+            <InputTextArea @bind-Value="@author.Vocabulary" class="input-field" />
+            
+            <label>Специализация</label>
+            <InputText @bind-Value="@author.Specialization" class="input-field" />
+            
+            <label>Тон</label>
+            <InputText @bind-Value="@author.Tone" class="input-field" />
+        </div>
+        
+        <!-- Выпадающий список -->
+        <label>Генеративная модель</label>
+        <InputSelect @bind-Value="selectedCategory" class="input-field">
+            <option value="">Выберите...</option>
+            <option value="@GptModelsEnum.O1_mini">GPT-o1-mini</option>
+            <option value="@GptModelsEnum.Gpt_40_mini">GPT-4o-mini</option>
+            <option value="@GptModelsEnum.Gpt_4o">GPT-4o</option>
+            <option value="@GptModelsEnum.Gpt4_turbo">GPT4-turbo</option>
+            <option value="@GptModelsEnum.O1_preview">GPT-o1-preview</option>
+        </InputSelect>
+
+        <!-- Кнопки -->
+        <div class="button-group">
+            <button class="btn" @onclick="GenerateArticle">Сгенерировать статью</button>
+            <button class="btn" @onclick="GenerateSources">Подобрать источники</button>
+            <button class="btn" @onclick="ToHome">Вернуться на главную</button>
+        </div>
+    </div>
+
+    <!-- Правая часть: Ввод темы и большой текст -->
+    <div class="right-panel">
+        <div class="topic-input">
+            <label>Тема</label>
+            <InputText @bind-Value="topic" class="input-field" />
+        </div>
+
+        <div class="text-area">
+            <label>Материалы</label>
+            @if (isLoadingMaterial)
+            {
+            <p>Загрузка @loadingDots</p>
+            }
+            <InputTextArea @bind-Value="text" class="large-text-field" />
+        </div>
+        
+        <div class="big-text">
+            <label>Статья</label>
+            @if (isLoadingArticle)
+            {
+                <p>Загрузка @loadingDots</p>
+            }
+            <InputTextArea @bind-Value="bigText" class="large-text-field" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid authorId { get; set; }
+    private AuthorModel author = new ();
+    private GptModelsEnum selectedCategory;
+    private string topic;
+    private string text;
+    private string bigText;
+    private const string theme = "Укажите тему";
+    Timer timer;
+    private string loadingDots = ".";
+    private bool isLoadingArticle = false;
+    private bool isLoadingMaterial = false;
+
+    void ToHome()
+    {
+        NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        author = await AuthorService.GetByIdAsync(authorId);
+        timer = new Timer(UpdateLoadingDots, null, Timeout.Infinite, 250);
+    }
+    
+    private void UpdateLoadingDots(object state)
+    {
+        if (loadingDots.Length == 3)
+        {
+            loadingDots = ".";
+        }
+        else
+        {
+            loadingDots += ".";
+        }
+
+        InvokeAsync(StateHasChanged); // Перерисовываем компонент
+    }
+
+    async Task GenerateArticle()
+    {
+        if (string.IsNullOrWhiteSpace(topic) || string.Equals(topic, theme))
+        {
+            topic = theme;
+            return;
+        }
+
+        isLoadingArticle = true;
+        timer.Change(0, 250);
+        bigText = await ArticleService.GetArticleAsync(topic, author, selectedCategory);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
+        isLoadingArticle = false;
+        await SavedArticleService.SaveAsync(new()
+        {
+            Author = author.Name,
+            Text = bigText
+        });
+
+    }
+
+    async Task GenerateSources()
+    {
+        if (string.IsNullOrWhiteSpace(topic) || string.Equals(topic, theme))
+        {
+            topic = theme;
+            return;
+        }
+
+        isLoadingMaterial = true;
+        timer.Change(0, 250);
+        text = await ArticleService.GetMaterialsAsync(topic);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
+        isLoadingMaterial = false;
+    }
+}
+
+<style>
+    /* Контейнер для всей страницы */
+    .container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    /* Левая панель */
+    .left-panel {
+        width: 30%;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        border: 1px solid #ccc;
+    }
+
+    /* Правая панель */
+    .right-panel {
+        width: 65%;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        border: 1px solid #ccc;
+    }
+
+    /* Поля ввода */
+    .input-field {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    /* Большие текстовые поля */
+    .large-text-field {
+        width: 100%;
+        height: 150px;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    /* Группа кнопок */
+    .button-group {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    /* Кнопки */
+    .btn {
+        background-color: #007BFF;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #0056b3;
+    }
+</style>
+

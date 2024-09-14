@@ -1,0 +1,67 @@
+﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@page "/savedarticles"
+@using Core.Contracts
+@using Core.Models
+@inject ISavedArticleService articleService
+
+<PageTitle>Сохраненные статьи</PageTitle>
+
+<h2>Сохраненные статьи</h2>
+
+<div class="article-list">
+    @if (articles == null || articles.Count == 0)
+    {
+        <p>Нет сохраненных статей.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var article in articles)
+            {
+                <li class="article-item">
+                    <div class="article-header">
+                        <strong>Автор: @article.Author</strong>
+                    </div>
+                    <div class="article-content">
+                        <p>@article.Text</p>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    private List<SavedArticleModel> articles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        articles = await articleService.GetAllAsync();
+    }
+
+}
+
+<style>
+    .article-list {
+        margin-top: 20px;
+    }
+
+    .article-item {
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background-color: #f9f9f9;
+    }
+
+    .article-header {
+        font-size: 18px;
+        color: #333;
+    }
+
+    .article-content {
+        margin-top: 10px;
+        font-size: 16px;
+        color: #555;
+    }
+</style>

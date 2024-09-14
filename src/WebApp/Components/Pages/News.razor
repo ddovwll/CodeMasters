@@ -1,0 +1,224 @@
+﻿@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@page "/News"
+@using Core.Contracts
+@using Core.Models
+@inject INewsService NewsService
+@implements IDisposable
+@inject NavigationManager NavigationManager
+
+
+
+<PageTitle>Контент Мастер Новости</PageTitle>
+
+
+<style>
+    /* Основной стиль страницы */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    h2 {
+        text-align: center;
+        font-size: 24px;
+        color: #333;
+    }
+
+    /* Контейнер для поиска */
+    .search-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .search-container input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+    }
+
+    .search-container button {
+        padding: 10px 20px;
+        border-radius: 5px;
+        border: none;
+        background-color: #007BFF;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+    }
+
+    .search-container button:hover {
+        background-color: #0056b3;
+    }
+
+    /* Контейнер для списка */
+    .list-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        gap: 20px;
+    }
+
+    /* Список новостей */
+    .scrollable-list {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+        flex: 1;
+        border: 1px solid #ccc;
+    }
+
+    .scrollable-list h3 {
+        text-align: center;
+        margin-bottom: 15px;
+        font-size: 20px;
+        color: #555;
+    }
+
+    /* Стили для элементов списка */
+    ul {
+        list-style-type: disc;
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    li {
+        margin-bottom: 10px;
+        font-size: 16px;
+        color: #333;
+    }
+
+    a {
+        color: #007BFF;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    /* Стили для полосы прокрутки */
+    .scrollable-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .scrollable-list::-webkit-scrollbar-thumb {
+        background-color: #888;
+        border-radius: 10px;
+    }
+
+    .scrollable-list::-webkit-scrollbar-thumb:hover {
+        background-color: #555;
+    }
+
+    /* Стили для кнопок */
+    .btn {
+        background-color: #007BFF;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 0 10px;
+        transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #0056b3;
+    }
+
+</style>
+
+<div class="container">
+    <h3>Новости</h3>
+
+    <!-- Форма для поиска новостей -->
+    <div class="search-container">
+        <input type="text" @bind="searchTopic" placeholder="Введите тему для поиска..." class="form-control" />
+        <button class="btn btn-primary" @onclick="LoadNews">Поиск новостей</button>
+        <button class="btn btn-primary" @onclick="ToHome">Вернуться на главную</button>
+    </div>
+
+    <!-- Список новостей -->
+    <div class="news-list">
+        @if (isLoading)
+        {
+        <p>Загрузка нвостей @loadingDots</p>
+        }
+        else if (news == null || !news.Any())
+        {
+        <p>Нет новостей по заданной теме.</p>
+        }
+        else
+        {
+        @foreach (var item in news)
+        {
+        <div class="news-item">
+            <h4>@item.Title</h4>
+            <p><strong>Автор:</strong> @item.Author</p>
+            <p>@item.Description</p>
+            <p><small>@item.PublishedAt?.ToString("g")</small></p>
+            <a href="@item.Url" target="_blank" class="btn btn-outline-secondary">Читать полностью</a>
+        </div>
+        }
+        }
+    </div>
+</div>
+
+@code {
+    private List<ArticleModel> news;
+    private string searchTopic = string.Empty;
+    private bool isLoading = false;
+    private string loadingDots = ".";
+    Timer timer;
+
+    void ToHome()
+    {
+        NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+    
+    protected override void OnInitialized()
+    {
+        // Инициализируем таймер с интервалом 500 мс
+        timer = new Timer(UpdateLoadingDots, null, Timeout.Infinite, 250);
+    }
+
+    private async Task LoadNews()
+    {
+        isLoading = true;
+        timer.Change(0, 250);
+        news = await NewsService.GetNewsAsync(searchTopic);
+        isLoading = false;
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
+    }
+    
+    private void UpdateLoadingDots(object state)
+    {
+        if (loadingDots.Length == 3)
+        {
+            loadingDots = ".";
+        }
+        else
+        {
+            loadingDots += ".";
+        }
+
+        InvokeAsync(StateHasChanged); // Перерисовываем компонент
+    }
+
+    public void Dispose()
+    {
+        timer.Dispose();
+    }
+}
