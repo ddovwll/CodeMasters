@@ -13,7 +13,11 @@ public class AuthorService : IAuthorService
     {
         this.repository = repository;
     }
-
+    /// <summary>
+    /// Добавление автора в БД
+    /// </summary>
+    /// <param name="author">автор</param>
+    /// <returns>AuthorModel</returns>
     public async Task<AuthorModel> AddAuthorAsync(AuthorModel author)
     {
         if (!Validator.ValidateAuthor(author))
@@ -23,7 +27,11 @@ public class AuthorService : IAuthorService
         
         return author;
     }
-
+    /// <summary>
+    /// Поиск автора по ID
+    /// </summary>
+    /// <param name="authorId">Id</param>
+    /// <returns>AuthorModel</returns>
     public async Task<AuthorModel> GetByIdAsync(Guid authorId)
     {
         var author = await repository.GetByIdAsync(authorId);
@@ -33,14 +41,23 @@ public class AuthorService : IAuthorService
 
         return author;
     }
-
+    /// <summary>
+    /// Получение списка авторов
+    /// </summary>
+    /// <param name="skip">сколько пропустить эл-ов</param>
+    /// <param name="take">сколько взять эл-ов</param>
+    /// <returns>List of AuthorModel</returns>
     public async Task<List<AuthorModel>> GetAuthorsAsync(int skip, int take)
     {
         var authors = await repository.GetAuthorsAsync(skip, take);
         
         return authors;
     }
-
+    /// <summary>
+    /// Обновление данных обавторе
+    /// </summary>
+    /// <param name="author">автор</param>
+    /// <returns>AuthorModel</returns>
     public async Task<AuthorModel> UpdateAuthorAsync(AuthorModel author)
     {
         var authorFromDb = await repository.GetByIdAsync(author.Id);
@@ -51,7 +68,10 @@ public class AuthorService : IAuthorService
 
         return author;
     }
-
+    /// <summary>
+    /// Получение списка всех известных людей
+    /// </summary>
+    /// <returns>List of AuthorModel</returns>
     public async Task<List<AuthorModel>> GetFamousAuthor()
     {
         var authors = await repository.GetFamousAuthor();

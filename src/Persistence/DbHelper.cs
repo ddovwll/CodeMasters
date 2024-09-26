@@ -13,6 +13,9 @@ public class DbHelper : DbContext
     public DbSet<AuthorModel> Authors { get; set; }
     public DbSet<SavedArticleModel> SavedArticles { get; set; }
 
+    /// <summary>
+    /// Генерация списка известных людей
+    /// </summary>
     public async Task GenerateFamousAuthorsAsync()
     {
         if (!Authors.Any(a => a.IsFamous))

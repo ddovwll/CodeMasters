@@ -3,29 +3,65 @@
 @using Core.Contracts
 @using Core.Models
 @inject ISavedArticleService articleService
+@inject IAnalyticsService AnalyticsService
+@inject NavigationManager NavManager
 
 <PageTitle>Сохраненные статьи</PageTitle>
 
 <h2>Сохраненные статьи</h2>
 
+<div class="header">
+    <button class="home-btn" @onclick="NavigateHome">Вернуться на главную</button>
+</div>
+
 <div class="article-list">
+    
     @if (articles == null || articles.Count == 0)
     {
         <p>Нет сохраненных статей.</p>
     }
     else
     {
+        var i = 0;
         <ul>
             @foreach (var article in articles)
             {
                 <li class="article-item">
                     <div class="article-header">
                         <strong>Автор: @article.Author</strong>
+                        <strong>Тема: @article.Name</strong>
                     </div>
                     <div class="article-content">
                         <p>@article.Text</p>
                     </div>
+                    <div class="statistics-panel">
+                        <h3>Статистика текста</h3>
+                        <p>
+                            <strong>Количество символов:</strong> @analytics[i].SymbolsCount
+                        </p>
+                        <p>
+                            <strong>Количество слов:</strong> @analytics[i].WordsCount
+                        </p>
+
+                        <h4>Частые слова:</h4>
+                        <div class="word-list-container">
+                            <ul class="word-list">
+                                @foreach (var word in (showAllWords ? analytics[i].Words : analytics[i].Words.Take(5)))
+                                {
+                                    <li>@word.Key: @word.Value</li>
+                                }
+                            </ul>
+
+                            <div class="button-container">
+                                <!-- Кнопка для отображения всех слов -->
+                                <button class="toggle-btn" @onclick="ToggleShowAllWords">
+                                    @(showAllWords ? "Скрыть" : "Показать все")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </li>
+                i++;
             }
         </ul>
     }
@@ -33,35 +69,190 @@
 
 @code {
     private List<SavedArticleModel> articles;
+    private bool showAllWords = false;
+    private List<AnalyticsModel> analytics;
 
+    /// <summary>
+    /// обработчик кнопки "развернуть статистику
+    /// </summary>
+    private void ToggleShowAllWords()
+    {
+        showAllWords = !showAllWords;
+    }
+
+    /// <summary>
+    /// Инициализация страницы
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         articles = await articleService.GetAllAsync();
+        analytics = new List<AnalyticsModel>(articles.Count);
+        foreach (var text in articles)
+        {
+            analytics.Add(await AnalyticsService.GetAnalyticsAsync(text.Text));
+        }
     }
 
+    /// <summary>
+    /// Обработчик кнопки "Домой"
+    /// </summary>
+    private void NavigateHome()
+    {
+        NavManager.NavigateTo("/");
+    }
 }
 
 <style>
+    /* Основные стили для страницы */
+    body {
+        background-color: #121212; /* Темный фон */
+        color: #e0e0e0; /* Светлый текст */
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+
+    /* Контейнер для списка статей */
     .article-list {
-        margin-top: 20px;
+        max-width: 800px;
+        margin: 0 auto; /* Центрирование */
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #1e1e1e; /* Темный фон для контейнера */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     }
 
+    /* Стили для элементов списка */
     .article-item {
+        margin-bottom: 20px;
         padding: 15px;
-        border: 1px solid #ccc;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        background-color: #f9f9f9;
+        border: 1px solid #333; /* Темная граница */
+        border-radius: 8px;
+        background-color: #2a2a2a; /* Темный фон для элемента */
+        transition: background-color 0.3s, transform 0.3s; /* Плавный переход */
     }
 
+    .article-item:hover {
+        background-color: #3a3a3a; /* Светлее при наведении */
+        transform: translateY(-2px); /* Легкий подъем при наведении */
+    }
+
+    /* Заголовки в статье */
     .article-header {
-        font-size: 18px;
-        color: #333;
+        font-size: 1.2em;
+        margin-bottom: 10px;
+        color: #ffc107; /* Желтый цвет заголовка */
     }
 
-    .article-content {
-        margin-top: 10px;
-        font-size: 16px;
-        color: #555;
+    .article-content p {
+        margin: 10px 0;
+        line-height: 1.6; /* Увеличение межстрочного интервала */
     }
+
+    /* Панель статистики */
+    .statistics-panel {
+        margin-top: 15px;
+        padding: 10px;
+        border-top: 1px solid #444; /* Линия сверху */
+    }
+
+    /* Заголовки статистики */
+    .statistics-panel h3,
+    .statistics-panel h4 {
+        margin: 10px 0;
+        color: #ff8c00; /* Оранжевый цвет для заголовков статистики */
+    }
+
+    /* Стили для списка слов */
+    .word-list-container {
+        margin-top: 10px;
+    }
+
+    .word-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .word-list li {
+        padding: 5px 0;
+        border-bottom: 1px solid #444; /* Разделение слов */
+        color: #d0d0d0; /* Светлый текст для слов */
+    }
+
+    .word-list li:last-child {
+        border-bottom: none; /* Убираем разделитель для последнего элемента */
+    }
+
+    /* Кнопка для отображения всех слов */
+    .toggle-btn {
+        margin-top: 10px;
+        padding: 10px 15px;
+        background-color: #4CAF50; /* Зеленый цвет */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s; /* Плавный переход */
+    }
+
+    .toggle-btn:hover {
+        background-color: #45a049; /* Темнее при наведении */
+        transform: translateY(-1px); /* Легкий подъем при наведении */
+    }
+
+    .toggle-btn:focus {
+        outline: none; /* Убираем обводку */
+    }
+
+    /* Контейнер для списка слов */
+    .word-list-container {
+        margin-top: 10px;
+        position: relative; /* Устанавливаем относительное позиционирование для родителя */
+    }
+
+    .word-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .button-container {
+        position: absolute; /* Фиксируем кнопку в абсолютной позиции */
+        right: 0; /* Устанавливаем кнопку вправо */
+        top: 0; /* Устанавливаем кнопку в верхнюю часть контейнера */
+        margin-left: 10px; /* Небольшое расстояние между списком и кнопкой */
+    }
+
+    .header {
+        display: flex;
+        justify-content: center; /* Центрируем кнопку по горизонтали */
+        position: fixed; /* Фиксируем положение кнопки */
+        top: 10px; /* Расстояние от верхней части окна */
+        left: 50%; /* Позиционируем по центру */
+        transform: translateX(-50%); /* Центрируем элемент относительно его ширины */
+        z-index: 1000; /* Увеличиваем z-index, чтобы кнопка была выше других элементов */
+        background-color: rgba(0, 0, 0, 0.7); /* Полупрозрачный черный фон */
+        padding: 10px 20px; /* Отступы вокруг кнопки */
+        border-radius: 5px; /* Скругление углов фона */
+    }
+
+    .home-btn {
+        background-color: #4caf50; /* Цвет фона кнопки */
+        color: white; /* Цвет текста */
+        border: none; /* Убираем рамку */
+        padding: 10px 15px; /* Отступы внутри кнопки */
+        border-radius: 5px; /* Скругление углов */
+        cursor: pointer; /* Указатель при наведении */
+        font-family: 'Poppins', sans-serif; /* Используем интересный шрифт */
+        font-weight: 600; /* Жирный текст */
+        transition: background-color 0.3s; /* Плавный переход цвета */
+    }
+
+    .home-btn:hover {
+        background-color: #45a049; /* Цвет кнопки при наведении */
+    }
+
+
+
 </style>

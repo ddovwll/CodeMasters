@@ -15,6 +15,11 @@ public class NewsService : INewsService
         this.newsApiClient = newsApiClient;
     }
 
+    /// <summary>
+    /// Получение новостей
+    /// </summary>
+    /// <param name="q">тема новостей; default = "новости"</param>
+    /// <returns>List of ArticleModel</returns>
     public async Task<List<ArticleModel>> GetArticlesAsync(string q = "новости")
     {
         var request = new EverythingRequest()

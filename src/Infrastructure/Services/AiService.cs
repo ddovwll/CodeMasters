@@ -2,7 +2,6 @@
 using System.Text.Json;
 using Application.Contracts;
 using Core.Enums;
-using LikhodedDynamics.Sber.GigaChatSDK;
 using Newtonsoft.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -16,7 +15,11 @@ public class AiService : IAiService
     {
         this.apiKey = apiKey;
     }
-
+    /// <summary>
+    /// Отправка сообщения LLM
+    /// </summary>
+    /// <param name="message">сообщение</param>
+    /// <returns>string - ответ</returns>
     public async Task<string> SendMessageAsync(string message)
     {
         using var client = new HttpClient();
@@ -40,7 +43,12 @@ public class AiService : IAiService
 
         return content;
     }
-    
+    /// <summary>
+    /// Отправка сообщения LLM
+    /// </summary>
+    /// <param name="message">сообщение</param>
+    /// <param name="model">модель LLM</param>
+    /// <returns>string - ответ</returns>
     public async Task<string> SendMessageAsync(string message, GptModelsEnum model)
     {
         string gptModel = "o1-mini";
@@ -60,6 +68,9 @@ public class AiService : IAiService
                 break;
             case GptModelsEnum.O1_preview:
                 gptModel = "o1-preview";
+                break;
+            case GptModelsEnum.Gpt_4:
+                gptModel = "gpt-4";
                 break;
         }
         
@@ -85,6 +96,17 @@ public class AiService : IAiService
         return content;
     }
 
-    record Request(string model, List<Message> messages);
+    /// <summary>
+    /// Запись для отправки запроса
+    /// </summary>
+    /// <param name="model">модель LLM</param>
+    /// <param name="messages">Сообщение</param>
+    /// <param name="max_completion_tokens">Максимально кол-во токенов</param>
+    record Request(string model, List<Message> messages, int max_completion_tokens = 6000);
+    /// <summary>
+    /// Запись для сообщения
+    /// </summary>
+    /// <param name="role">роль</param>
+    /// <param name="content">содержимое</param>
     record Message(string role, string content);
 }

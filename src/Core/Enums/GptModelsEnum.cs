@@ -6,5 +6,6 @@ public enum GptModelsEnum
     Gpt_4o,
     Gpt_40_mini,
     Gpt4_turbo,
-    O1_preview
+    O1_preview,
+    Gpt_4
 }

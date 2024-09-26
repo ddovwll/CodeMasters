@@ -9,121 +9,7 @@
 <PageTitle>Контент Мастер</PageTitle>
 
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-    /* Основной стиль страницы */
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
-    }
 
-    h2 {
-      text-align: center;
-      font-size: 24px;
-      color: #333;
-    }
-
-    /* Контейнер для списков */
-    .list-container {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-      gap: 20px;
-    }
-
-    /* Стиль каждого списка */
-    .scrollable-list {
-      background-color: #fff;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      max-height: 500px; /* Ограничение по высоте */
-      overflow-y: auto; /* Вертикальная прокрутка */
-      flex: 1;
-      border: 1px solid #ccc;
-    }
-
-    .scrollable-list h3 {
-      text-align: center;
-      margin: 0 0 15px 0;
-      font-size: 20px;
-      color: #555;
-    }
-
-    /* Стили для списка */
-    ul {
-      list-style-type: disc;
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .qwe {
-      margin-bottom: 10px;
-      font-size: 16px;
-      color: #333;
-      cursor: pointer; /* Курсор в виде руки */
-      transition: background-color 0.3s, color 0.3s; /* Эффект плавного перехода */
-    }
-
-    /* Подсказка: изменения при наведении */
-    .qwe:hover {
-      background-color: #f0f0f0; /* Легкое выделение фона при наведении */
-      color: #007BFF; /* Изменение цвета текста */
-      text-decoration: underline; /* Подчеркивание текста при наведении */
-    }
-
-    /* Добавление иконки стрелки (используем псевдоэлемент ::before) */
-    .qwe::before {
-      content: '➔ '; /* Добавляем стрелку перед текстом */
-      color: #007BFF;
-      font-size: 16px;
-      margin-right: 10px;
-      transition: transform 0.3s; /* Плавная анимация */
-    }
-
-    /* Стили для полосы прокрутки */
-    .scrollable-list::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .scrollable-list::-webkit-scrollbar-thumb {
-      background-color: #888;
-      border-radius: 10px;
-    }
-
-    .scrollable-list::-webkit-scrollbar-thumb:hover {
-      background-color: #555;
-    }
-
-    /* Стили для кнопок */
-    .buttons-container {
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    .btn {
-      background-color: #007BFF;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 0 10px;
-      transition: background-color 0.3s;
-    }
-
-    .btn:hover {
-      background-color: #0056b3;
-    }
-
-  </style>
-</head>
 <body>
 
 <h2>Списки авторов</h2>
@@ -183,6 +69,9 @@
     List<AuthorModel> authors;
     List<AuthorModel> famous;
 
+    /// <summary>
+    /// Инициализация начального экрана
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         authors = await AuthorService.GetAuthorsAsync(skip, take);
@@ -190,23 +79,121 @@
         authorsLoaded = true;
     }
 
+    /// <summary>
+    /// Обработчик кнопки "К новостям"
+    /// </summary>
     void ToNews()
     {
         Navigation.NavigateTo("/News", forceLoad: true);
     }
 
+    /// <summary>
+    /// Обработчик кнопки "Добавить автора"
+    /// </summary>
     void ToAddAuthor()
     {
         Navigation.NavigateTo("/addauthor", forceLoad: true);
     }
 
+    /// <summary>
+    /// Обработчик кнопки "Сгенерировать статью"
+    /// </summary>
+    /// <param name="author">Модель автора</param>
     void ToArticle(AuthorModel author)
     {
         Navigation.NavigateTo($"/article/{author.Id}");
     }
     
+    /// <summary>
+    /// Обработчик кнопки "Читать статьи"
+    /// </summary>
     void ToSavedArticles()
     {
         Navigation.NavigateTo($"/savedarticles");
     }
 }
+
+<style>
+    /* Основные стили для страницы */
+    body {
+        background-color: #121212; /* Темный фон */
+        color: #e0e0e0; /* Светлый текст */
+        font-family: 'Poppins', sans-serif; /* Шрифт */
+        margin: 0;
+        padding: 20px; /* Общие отступы вокруг страницы */
+    }
+
+    /* Контейнер для списков авторов */
+    .list-container {
+        display: flex; /* Используем флекс для размещения списков */
+        max-width: 1200px; /* Максимальная ширина контейнера */
+        margin: 0 auto; /* Центрирование контейнера */
+        gap: 20px; /* Промежуток между списками */
+    }
+
+    /* Стили для скроллируемых списков */
+    .scrollable-list {
+        flex: 1; /* Каждый список занимает равное пространство */
+        padding: 20px; /* Отступы внутри списка */
+        border-radius: 8px; /* Скругление углов */
+        background-color: #1e1e1e; /* Темный фон для списков */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Тень для списка */
+        overflow-y: auto; /* Включаем вертикальный скроллинг */
+        max-height: 300px; /* Ограничиваем высоту для скроллируемых списков */
+    }
+
+    /* Заголовки в списках */
+    .scrollable-list h3 {
+        margin-bottom: 15px; /* Отступы снизу для заголовков */
+        color: #ffc107; /* Желтый цвет заголовков */
+        font-weight: 600; /* Жирный текст */
+    }
+
+    /* Стили для элементов списка */
+    .scrollable-list ul {
+        list-style-type: none; /* Убираем маркеры */
+        padding: 0; /* Убираем отступы */
+        margin: 0; /* Убираем отступы */
+    }
+
+    .scrollable-list li {
+        padding: 10px; /* Отступы внутри элементов списка */
+        border-bottom: 1px solid #444; /* Разделитель между элементами списка */
+        color: #d0d0d0; /* Светлый текст для элементов списка */
+        cursor: pointer; /* Указатель при наведении */
+        transition: background-color 0.3s; /* Плавный переход */
+    }
+
+    .scrollable-list li:hover {
+        background-color: #3a3a3a; /* Подсветка при наведении */
+    }
+
+    .scrollable-list li:last-child {
+        border-bottom: none; /* Убираем разделитель для последнего элемента */
+    }
+
+    /* Контейнер для кнопок */
+    .buttons-container {
+        display: flex; /* Используем флекс для размещения кнопок */
+        justify-content: space-around; /* Равномерное распределение кнопок */
+        margin-top: 20px; /* Отступ сверху */
+    }
+
+    /* Стили для кнопок */
+    .btn {
+        padding: 10px 20px; /* Отступы внутри кнопок */
+        border: none; /* Убираем рамку */
+        border-radius: 5px; /* Скругление углов */
+        background-color: #4caf50; /* Зеленый цвет фона */
+        color: white; /* Цвет текста */
+        cursor: pointer; /* Указатель при наведении */
+        font-family: 'Poppins', sans-serif; /* Шрифт для кнопок */
+        font-weight: 600; /* Жирный текст */
+        transition: background-color 0.3s, transform 0.3s; /* Плавный переход */
+    }
+
+    .btn:hover {
+        background-color: #45a049; /* Темнее при наведении */
+    }
+
+</style>

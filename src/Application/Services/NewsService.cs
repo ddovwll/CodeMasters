@@ -11,7 +11,11 @@ public class NewsService : Core.Contracts.INewsService
     {
         this.newsService = newsService;
     }
-
+    /// <summary>
+    /// Получение новостей
+    /// </summary>
+    /// <param name="keyword">тема</param>
+    /// <returns>List of ArticleModel</returns>
     public async Task<List<ArticleModel>> GetNewsAsync(string keyword)
     {
         List<ArticleModel> articles;

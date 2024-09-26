@@ -7,39 +7,51 @@
 @inject IArticleService ArticleService
 @inject NavigationManager NavigationManager
 @inject ISavedArticleService SavedArticleService
+@inject IAnalyticsService AnalyticsService
 
-
-<h2>Информация об авторе</h2>
-
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <title>Генерация статьи</title>
+</head>
 <div class="container">
     <!-- Левая часть: Информация об авторе -->
     <div class="left-panel">
         <div class="author-info">
             <label>Имя автора</label>
-            <InputText @bind-Value="@author.Name" class="input-field" />
-            
+            <InputText @bind-Value="@author.Name" class="input-field"/>
+
             <label>Биография</label>
-            <InputTextArea @bind-Value="@author.Biography" class="input-field" />
-            
+            <InputTextArea @bind-Value="@author.Biography" class="input-field"/>
+
             <label>Словарный запас</label>
-            <InputTextArea @bind-Value="@author.Vocabulary" class="input-field" />
-            
+            <InputTextArea @bind-Value="@author.Vocabulary" class="input-field"/>
+
             <label>Специализация</label>
-            <InputText @bind-Value="@author.Specialization" class="input-field" />
-            
+            <InputText @bind-Value="@author.Specialization" class="input-field"/>
+
             <label>Тон</label>
-            <InputText @bind-Value="@author.Tone" class="input-field" />
+            <InputText @bind-Value="@author.Tone" class="input-field"/>
         </div>
-        
+
         <!-- Выпадающий список -->
         <label>Генеративная модель</label>
         <InputSelect @bind-Value="selectedCategory" class="input-field">
             <option value="">Выберите...</option>
+            <option value="@GptModelsEnum.Gpt_4">GPT4(Для больших текстов)</option>
             <option value="@GptModelsEnum.O1_mini">GPT-o1-mini</option>
             <option value="@GptModelsEnum.Gpt_40_mini">GPT-4o-mini</option>
             <option value="@GptModelsEnum.Gpt_4o">GPT-4o</option>
             <option value="@GptModelsEnum.Gpt4_turbo">GPT4-turbo</option>
             <option value="@GptModelsEnum.O1_preview">GPT-o1-preview</option>
+        </InputSelect>
+
+        <label>Язык статьи</label>
+        <InputSelect @bind-Value="language" class="input-field">
+            <option value="">Выберите...</option>
+            <option value="@LanguagesEnum.Russian">Русский</option>
+            <option value="@LanguagesEnum.Portuguese">Португальский</option>
+            <option value="@LanguagesEnum.English">Английский</option>
+            <option value="@LanguagesEnum.Spanish">Испанский</option>
         </InputSelect>
 
         <!-- Кнопки -->
@@ -54,34 +66,67 @@
     <div class="right-panel">
         <div class="topic-input">
             <label>Тема</label>
-            <InputText @bind-Value="topic" class="input-field" />
+            <InputText @bind-Value="topic" class="input-field"/>
         </div>
 
         <div class="text-area">
             <label>Материалы</label>
             @if (isLoadingMaterial)
             {
-            <p>Загрузка @loadingDots</p>
+                <p>Загрузка @loadingDots</p>
             }
-            <InputTextArea @bind-Value="text" class="large-text-field" />
+            <InputTextArea @bind-Value="text" class="large-text-field"/>
         </div>
-        
+
         <div class="big-text">
             <label>Статья</label>
             @if (isLoadingArticle)
             {
                 <p>Загрузка @loadingDots</p>
             }
-            <InputTextArea @bind-Value="bigText" class="large-text-field" />
+            <InputTextArea Value="@bigText" ValueExpression="() => bigText" @oninput=" async args => { bigText = args.Value.ToString(); analytics = await AnalyticsService.GetAnalyticsAsync(bigText);}" class="large-text-field"/>
+        </div>
+
+        <div class="article-button-group">
+            <button class="btn" @onclick="SaveArticle">Сохранить статью</button>
+        </div>
+
+        <!-- Блок статистики -->
+        <div class="statistics-panel">
+            <h3>Статистика текста</h3>
+            <p>
+                <strong>Количество символов:</strong> @analytics.SymbolsCount
+            </p>
+            <p>
+                <strong>Количество слов:</strong> @analytics.WordsCount
+            </p>
+
+            <h4>Частые слова:</h4>
+            <div class="word-list-container">
+                <div class="button-container">
+                    <!-- Кнопка для отображения всех слов -->
+                    <button class="toggle-btn" @onclick="ToggleShowAllWords">
+                        @(showAllWords ? "Скрыть" : "Показать все")
+                    </button>
+                </div>
+                <ul class="word-list">
+                    @foreach (var word in (showAllWords ? analytics.Words : analytics.Words.Take(5)))
+                    {
+                        <li>@word.Key: @word.Value</li>
+                    }
+                </ul>
+
+            </div>
         </div>
     </div>
 </div>
 
+
 @code {
-    [Parameter]
-    public Guid authorId { get; set; }
-    private AuthorModel author = new ();
-    private GptModelsEnum selectedCategory;
+    [Parameter] public Guid authorId { get; set; }
+    private AuthorModel author = new();
+    private GptModelsEnum selectedCategory = GptModelsEnum.O1_preview;
+    private LanguagesEnum language = LanguagesEnum.Russian;
     private string topic;
     private string text;
     private string bigText;
@@ -90,18 +135,56 @@
     private string loadingDots = ".";
     private bool isLoadingArticle = false;
     private bool isLoadingMaterial = false;
+    private AnalyticsModel analytics = new();
+    private bool showAllWords = false;
 
+    /// <summary>
+    /// Обработчик кнопки "Домой"
+    /// </summary>
     void ToHome()
     {
         NavigationManager.NavigateTo("/", forceLoad: true);
     }
-    
+
+    /// <summary>
+    /// Инициализация автора и таймера
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         author = await AuthorService.GetByIdAsync(authorId);
         timer = new Timer(UpdateLoadingDots, null, Timeout.Infinite, 250);
     }
-    
+
+    /// <summary>
+    /// Обработчик списка со статистикой
+    /// </summary>
+    private void ToggleShowAllWords()
+    {
+        showAllWords = !showAllWords;
+    }
+
+    /// <summary>
+    /// Сохранение статьи
+    /// </summary>
+    private async void SaveArticle()
+    {
+        if (analytics.WordsCount == 0)
+        {
+            bigText = "Необходимо сгенерировать статью!";
+            return;
+        }
+        await SavedArticleService.SaveAsync(new()
+        {
+            Author = author.Name,
+            Text = bigText,
+            Name = topic
+        });
+    }
+
+    /// <summary>
+    /// Анимация загрузки
+    /// </summary>
+    /// <param name="state"></param>
     private void UpdateLoadingDots(object state)
     {
         if (loadingDots.Length == 3)
@@ -116,6 +199,9 @@
         InvokeAsync(StateHasChanged); // Перерисовываем компонент
     }
 
+    /// <summary>
+    /// Генерация статьи
+    /// </summary>
     async Task GenerateArticle()
     {
         if (string.IsNullOrWhiteSpace(topic) || string.Equals(topic, theme))
@@ -126,17 +212,15 @@
 
         isLoadingArticle = true;
         timer.Change(0, 250);
-        bigText = await ArticleService.GetArticleAsync(topic, author, selectedCategory);
+        bigText = await ArticleService.GetArticleAsync(topic, author, selectedCategory, language);
+        analytics = await AnalyticsService.GetAnalyticsAsync(bigText);
         timer.Change(Timeout.Infinite, Timeout.Infinite);
         isLoadingArticle = false;
-        await SavedArticleService.SaveAsync(new()
-        {
-            Author = author.Name,
-            Text = bigText
-        });
-
     }
 
+    /// <summary>
+    /// Генерация источников
+    /// </summary>
     async Task GenerateSources()
     {
         if (string.IsNullOrWhiteSpace(topic) || string.Equals(topic, theme))
@@ -151,81 +235,158 @@
         timer.Change(Timeout.Infinite, Timeout.Infinite);
         isLoadingMaterial = false;
     }
+
 }
 
 <style>
+    /* Основные стили для страницы */
+    body {
+        background-color: #121212; /* Темный фон */
+        color: #e0e0e0; /* Светлый текст */
+        font-family: 'Poppins', sans-serif; /* Шрифт */
+        margin: 0;
+        padding: 20px;
+    }
+
     /* Контейнер для всей страницы */
     .container {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        padding: 20px;
+        display: flex; /* Используем флекс для размещения элементов */
+        max-width: 1200px; /* Максимальная ширина контейнера */
+        margin: 0 auto; /* Центрирование контейнера */
     }
 
     /* Левая панель */
     .left-panel {
-        width: 30%;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        border: 1px solid #ccc;
+        flex: 1; /* Занимает 1/3 пространства */
+        padding: 20px; /* Отступы внутри панели */
+        border-radius: 8px; /* Скругление углов */
+        background-color: #1e1e1e; /* Темный фон */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Тень для панели */
+        margin-right: 20px; /* Отступ справа для разделения панелей */
     }
 
     /* Правая панель */
     .right-panel {
-        width: 65%;
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        border: 1px solid #ccc;
+        flex: 2; /* Занимает 2/3 пространства */
+        padding: 20px; /* Отступы внутри панели */
+        border-radius: 8px; /* Скругление углов */
+        background-color: #1e1e1e; /* Темный фон */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Тень для панели */
     }
 
-    /* Поля ввода */
-    .input-field {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-        box-sizing: border-box;
+    /* Стили для полей ввода */
+    .input-field, .large-text-field {
+        width: 95%; /* Заполнение контейнера */
+        padding: 12px; /* Отступы внутри полей ввода */
+        border: 1px solid #333; /* Темная граница */
+        border-radius: 5px; /* Скругление углов */
+        background-color: #2a2a2a; /* Темный фон для полей ввода */
+        color: #e0e0e0; /* Светлый текст */
+        margin-bottom: 20px; /* Увеличенные отступы между полями */
     }
 
-    /* Большие текстовые поля */
+    /* Увеличенные отступы для больших текстовых областей */
     .large-text-field {
-        width: 100%;
-        height: 150px;
-        padding: 10px;
-        margin-bottom: 20px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-        box-sizing: border-box;
+        height: 200px; /* Увеличиваем высоту текстовой области */
+        resize: vertical; /* Разрешаем изменять размер по вертикали */
     }
 
-    /* Группа кнопок */
-    .button-group {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
+    /* Стили для меток */
+    label {
+        display: block; /* Отображение меток как блочные элементы */
+        margin-bottom: 5px; /* Отступы вокруг меток */
+        color: #ffc107; /* Желтый цвет текста меток */
+        font-weight: 600; /* Жирный текст */
     }
 
-    /* Кнопки */
+    /* Стили для кнопок */
     .btn {
-        background-color: #007BFF;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        transition: background-color 0.3s;
+        padding: 10px 15px; /* Отступы внутри кнопок */
+        border: none; /* Убираем рамку */
+        border-radius: 5px; /* Скругление углов */
+        background-color: #4caf50; /* Зеленый цвет фона */
+        color: white; /* Цвет текста */
+        cursor: pointer; /* Указатель при наведении */
+        font-family: 'Poppins', sans-serif; /* Шрифт */
+        font-weight: 600; /* Жирный текст */
+        transition: background-color 0.3s, transform 0.3s; /* Плавный переход */
+        margin-top: 10px; /* Отступ сверху для кнопок */
+    }
+
+    .button-container {
+        position: relative; /* Фиксируем кнопку в абсолютной позиции */
+        right: 0; /* Устанавливаем кнопку вправо */
+        top: 0; /* Устанавливаем кнопку в верхнюю часть контейнера */
+        margin-left: 10px; /* Небольшое расстояние между списком и кнопкой */
     }
 
     .btn:hover {
-        background-color: #0056b3;
+        background-color: #45a049; /* Темнее при наведении */
     }
-</style>
 
+    /* Стили для блока статистики */
+    .statistics-panel {
+        margin-top: 25px; /* Отступ сверху */
+        padding: 15px; /* Отступы внутри блока */
+        border-radius: 8px; /* Скругление углов */
+        background-color: #1e1e1e; /* Темный фон для статистики */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Тень для блока */
+    }
+
+    /* Заголовки в статистическом блоке */
+    .statistics-panel h3, .statistics-panel h4 {
+        margin: 10px 0; /* Отступы для заголовков */
+        color: #ff8c00; /* Оранжевый цвет для заголовков */
+        font-weight: 600; /* Жирный текст */
+    }
+
+    /* Стили для списка слов */
+    .word-list {
+        list-style-type: none; /* Убираем маркеры */
+        padding: 0; /* Убираем отступы */
+        margin: 10px 0; /* Отступы сверху и снизу */
+    }
+
+    .word-list li {
+        padding: 8px 0; /* Отступы для элементов списка */
+        border-bottom: 1px solid #444; /* Темная граница между элементами */
+        color: #d0d0d0; /* Светлый текст для слов */
+        transition: background-color 0.3s; /* Плавный переход */
+    }
+
+    .word-list li:hover {
+        background-color: #3a3a3a; /* Подсветка при наведении */
+    }
+
+    .word-list li:last-child {
+        border-bottom: none; /* Убираем разделитель для последнего элемента */
+    }
+    
+
+    /* Обновляем стили для списка слов */
+    .word-list {
+        flex: 1; /* Позволяем списку занимать оставшееся пространство */
+        margin-right: 20px; /* Отступ справа для разделения списка и кнопки */
+    }
+
+    .toggle-btn {
+        margin-top: 10px;
+        padding: 10px 15px;
+        background-color: #4CAF50; /* Зеленый цвет */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s; /* Плавный переход */
+    }
+
+    .toggle-btn:hover {
+        background-color: #45a049; /* Темнее при наведении */
+        transform: translateY(-1px); /* Легкий подъем при наведении */
+    }
+
+    .toggle-btn:focus {
+        outline: none; /* Убираем обводку */
+    }
+
+</style>

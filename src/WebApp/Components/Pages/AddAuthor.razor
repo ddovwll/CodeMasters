@@ -7,97 +7,37 @@
 
 <PageTitle>Контент Мастер Автор</PageTitle>
 
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-
-    h2 {
-        text-align: center;
-        font-size: 24px;
-        color: #333;
-    }
-
-    .form-container {
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        max-width: 600px;
-        margin: 0 auto;
-        border: 1px solid #ccc;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-        box-sizing: border-box;
-    }
-
-    .buttons-container {
-        margin-top: 20px;
-        text-align: center;
-    }
-
-    .btn {
-        background-color: #007BFF;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 0 10px;
-        transition: background-color 0.3s;
-    }
-
-    .btn:hover {
-        background-color: #0056b3;
-    }
-</style>
-
 
 <h2>Добавление автора</h2>
 
 <div class="form-container">
     <EditForm Model="@newAuthor" OnValidSubmit="HandleValidSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
 
         <div class="form-group">
             <label>Имя</label>
-            <InputText @bind-Value="newAuthor.Name" class="form-control" />
+            <InputText @bind-Value="newAuthor.Name" class="form-control"/>
         </div>
 
         <div class="form-group">
             <label>Биография</label>
-            <InputTextArea @bind-Value="newAuthor.Biography" class="form-control" />
+            <InputTextArea @bind-Value="newAuthor.Biography" class="form-control"/>
         </div>
 
         <div class="form-group">
             <label>Словарный запас</label>
-            <InputTextArea @bind-Value="newAuthor.Vocabulary" class="form-control" />
+            <InputTextArea @bind-Value="newAuthor.Vocabulary" class="form-control"/>
         </div>
 
         <div class="form-group">
             <label>Специализация</label>
-            <InputText @bind-Value="newAuthor.Specialization" class="form-control" />
+            <InputText @bind-Value="newAuthor.Specialization" class="form-control"/>
         </div>
 
         <div class="form-group">
             <label>Тон</label>
-            <InputText @bind-Value="newAuthor.Tone" class="form-control" />
+            <InputText @bind-Value="newAuthor.Tone" class="form-control"/>
         </div>
 
         <div class="buttons-container">
@@ -108,16 +48,97 @@
 </div>
 
 @code {
-private AuthorModel newAuthor = new ();
+    private AuthorModel newAuthor = new();
 
-private async Task HandleValidSubmit()
-{
-    await AuthorService.AddAuthorAsync(newAuthor);
-    newAuthor = new();
+    /// <summary>
+    /// Сохранение автора
+    /// </summary>
+    private async Task HandleValidSubmit()
+    {
+        await AuthorService.AddAuthorAsync(newAuthor);
+        newAuthor = new();
+    }
+
+    /// <summary>
+    /// обработчик кнопки "Домой"
+    /// </summary>
+    private void GoHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
 }
 
-private void GoHome()
-{
-Navigation.NavigateTo("/");
-}
-}
+<style>
+    /* Основные стили для страницы */
+    body {
+        background-color: #121212; /* Темный фон */
+        color: #e0e0e0; /* Светлый текст */
+        font-family: 'Poppins', sans-serif; /* Шрифт */
+        margin: 0;
+        padding: 20px; /* Общие отступы вокруг страницы */
+    }
+
+    /* Контейнер для формы */
+    .form-container {
+        max-width: 600px; /* Максимальная ширина контейнера */
+        margin: 0 auto; /* Центрирование контейнера */
+        padding: 20px; /* Отступы внутри контейнера */
+        background-color: #1e1e1e; /* Темный фон для формы */
+        border-radius: 8px; /* Скругление углов */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Тень для контейнера */
+    }
+
+    /* Стили для групп полей формы */
+    .form-group {
+        margin-bottom: 20px; /* Отступы между группами полей */
+    }
+
+    /* Стили для заголовков формы */
+    .form-group label {
+        display: block; /* Заголовки как блочные элементы */
+        margin-bottom: 5px; /* Отступ снизу */
+        color: #ffc107; /* Желтый цвет для заголовков */
+    }
+
+    /* Стили для текстовых полей */
+    .form-control {
+        width: 95%; /* Ширина полей на 100% */
+        padding: 10px; /* Отступы внутри полей */
+        border: 1px solid #444; /* Темная рамка */
+        border-radius: 5px; /* Скругление углов полей */
+        background-color: #2a2a2a; /* Темный фон для полей */
+        color: #e0e0e0; /* Светлый текст */
+        transition: border-color 0.3s; /* Плавный переход */
+    }
+
+    /* Эффект при фокусе на текстовых полях */
+    .form-control:focus {
+        border-color: #ffc107; /* Желтая рамка при фокусе */
+        outline: none; /* Убираем стандартный обвод */
+    }
+
+    /* Контейнер для кнопок */
+    .buttons-container {
+        display: flex; /* Используем флекс для размещения кнопок */
+        justify-content: space-between; /* Распределение кнопок по краям */
+    }
+
+    /* Стили для кнопок */
+    .btn {
+        padding: 10px 15px; /* Отступы внутри кнопок */
+        border: none; /* Убираем рамку */
+        border-radius: 5px; /* Скругление углов */
+        background-color: #4caf50; /* Зеленый цвет фона */
+        color: white; /* Цвет текста */
+        cursor: pointer; /* Указатель при наведении */
+        font-family: 'Poppins', sans-serif; /* Шрифт для кнопок */
+        font-weight: 600; /* Жирный текст */
+        transition: background-color 0.3s, transform 0.3s; /* Плавный переход */
+    }
+
+    .btn:hover {
+        background-color: #45a049; /* Темнее при наведении */
+    }
+
+</style>

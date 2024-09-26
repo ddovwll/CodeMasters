@@ -2,7 +2,6 @@ using Application.Contracts;
 using Application.Services;
 using Core.Contracts;
 using Infrastructure.Services;
-using LikhodedDynamics.Sber.GigaChatSDK;
 using Microsoft.EntityFrameworkCore;
 using NewsAPI;
 using Persistence;
@@ -14,7 +13,7 @@ using NewsService = Infrastructure.Services.NewsService;
 var builder = WebApplication.CreateBuilder(args);
 
 
-var dbContext = new DbContextOptionsBuilder<DbHelper>().UseNpgsql(builder.Configuration.GetConnectionString("Database"));
+var dbContext = new DbContextOptionsBuilder<DbHelper>().UseInMemoryDatabase("Database");
 await using (var db = new DbHelper(dbContext.Options))
 {
     await db.GenerateFamousAuthorsAsync();
@@ -23,7 +22,7 @@ await using (var db = new DbHelper(dbContext.Options))
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
+//Регистрация зависимостей
 builder.Services.AddScoped<NewsApiClient>(_ => 
     new NewsApiClient(builder.Configuration["NewsApiKey"]));
 builder.Services.AddScoped<INewsService, NewsService>();
@@ -34,9 +33,12 @@ builder.Services.AddSingleton<IAiService, AiService>(_=>new AiService(builder.Co
 builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<ISavedArticleRepository, SavedArticleRepository>();
 builder.Services.AddScoped<ISavedArticleService, SavedArticleService>();
+builder.Services.AddSingleton<IAnalyticsService, AnalyticsService>();
 
+//Регистрация контекста inMemory БД
 builder.Services.AddDbContext<DbHelper>(optionsBuilder => 
-    optionsBuilder.UseNpgsql(builder.Configuration.GetConnectionString("Database"))
+    //optionsBuilder.UseNpgsql(builder.Configuration.GetConnectionString("Database"))
+    optionsBuilder.UseInMemoryDatabase("Database")
     );
 
 

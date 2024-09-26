@@ -11,137 +11,9 @@
 <PageTitle>Контент Мастер Новости</PageTitle>
 
 
-<style>
-    /* Основной стиль страницы */
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-
-    h2 {
-        text-align: center;
-        font-size: 24px;
-        color: #333;
-    }
-
-    /* Контейнер для поиска */
-    .search-container {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .search-container input {
-        flex: 1;
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-    }
-
-    .search-container button {
-        padding: 10px 20px;
-        border-radius: 5px;
-        border: none;
-        background-color: #007BFF;
-        color: white;
-        cursor: pointer;
-        font-size: 16px;
-        transition: background-color 0.3s;
-    }
-
-    .search-container button:hover {
-        background-color: #0056b3;
-    }
-
-    /* Контейнер для списка */
-    .list-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-        gap: 20px;
-    }
-
-    /* Список новостей */
-    .scrollable-list {
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        max-height: 500px;
-        overflow-y: auto;
-        flex: 1;
-        border: 1px solid #ccc;
-    }
-
-    .scrollable-list h3 {
-        text-align: center;
-        margin-bottom: 15px;
-        font-size: 20px;
-        color: #555;
-    }
-
-    /* Стили для элементов списка */
-    ul {
-        list-style-type: disc;
-        margin: 0;
-        padding-left: 20px;
-    }
-
-    li {
-        margin-bottom: 10px;
-        font-size: 16px;
-        color: #333;
-    }
-
-    a {
-        color: #007BFF;
-        text-decoration: none;
-    }
-
-    a:hover {
-        text-decoration: underline;
-    }
-
-    /* Стили для полосы прокрутки */
-    .scrollable-list::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .scrollable-list::-webkit-scrollbar-thumb {
-        background-color: #888;
-        border-radius: 10px;
-    }
-
-    .scrollable-list::-webkit-scrollbar-thumb:hover {
-        background-color: #555;
-    }
-
-    /* Стили для кнопок */
-    .btn {
-        background-color: #007BFF;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 0 10px;
-        transition: background-color 0.3s;
-    }
-
-    .btn:hover {
-        background-color: #0056b3;
-    }
-
-</style>
-
 <div class="container">
     <h3>Новости</h3>
+    
 
     <!-- Форма для поиска новостей -->
     <div class="search-container">
@@ -183,17 +55,26 @@
     private string loadingDots = ".";
     Timer timer;
 
+    /// <summary>
+    /// Обработчик кнопки "Доомй"
+    /// </summary>
     void ToHome()
     {
         NavigationManager.NavigateTo("/", forceLoad: true);
     }
     
+    /// <summary>
+    /// Инициализация таймера анимации загрузки
+    /// </summary>
     protected override void OnInitialized()
     {
         // Инициализируем таймер с интервалом 500 мс
         timer = new Timer(UpdateLoadingDots, null, Timeout.Infinite, 250);
     }
 
+    /// <summary>
+    /// Загрузка новостей
+    /// </summary>
     private async Task LoadNews()
     {
         isLoading = true;
@@ -203,6 +84,10 @@
         timer.Change(Timeout.Infinite, Timeout.Infinite);
     }
     
+    /// <summary>
+    /// Анимация загрузки
+    /// </summary>
+    /// <param name="state"></param>
     private void UpdateLoadingDots(object state)
     {
         if (loadingDots.Length == 3)
@@ -217,8 +102,132 @@
         InvokeAsync(StateHasChanged); // Перерисовываем компонент
     }
 
+    /// <summary>
+    /// Удаление таймера из памяти
+    /// </summary>
     public void Dispose()
     {
         timer.Dispose();
     }
 }
+
+<style>
+    /* Основные стили для страницы */
+    body {
+        background-color: #121212; /* Темный фон */
+        color: #e0e0e0; /* Светлый текст */
+        font-family: 'Poppins', sans-serif; /* Шрифт */
+        margin: 0;
+        padding: 20px; /* Общие отступы вокруг страницы */
+    }
+
+    /* Контейнер для новостей */
+    .container {
+        max-width: 800px; /* Максимальная ширина контейнера */
+        margin: 0 auto; /* Центрирование контейнера */
+        padding: 20px; /* Отступы внутри контейнера */
+        background-color: #1e1e1e; /* Темный фон для контейнера */
+        border-radius: 8px; /* Скругление углов */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Тень для контейнера */
+    }
+
+    /* Заголовок страницы */
+    h3 {
+        color: #ffc107; /* Желтый цвет для заголовка */
+        margin-bottom: 20px; /* Отступ снизу */
+    }
+    
+
+
+    /* Стили для контейнера поиска */
+    .search-container {
+        display: flex; /* Используем флекс для размещения элементов */
+        justify-content: space-between; /* Распределение элементов по краям */
+        margin-bottom: 20px; /* Отступ снизу */
+        padding: 10px; /* Отступы внутри контейнера поиска */
+        background-color: #1e1e1e; /* Темный фон для контейнера */
+        border-radius: 8px; /* Скругление углов */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Легкая тень */
+        position: sticky; /* Закрепляем положение */
+        top: 20px; /* Отступ от верхней части окна */
+        z-index: 1000; /* Увеличиваем уровень наложения */
+    }
+
+
+    /* Стили для текстового поля поиска */
+    .form-control {
+        flex: 1; /* Поле занимает всю доступную ширину */
+        padding: 10px; /* Отступы внутри поля */
+        margin-right: 10px; /* Отступ справа */
+        border: 1px solid #444; /* Темная рамка */
+        border-radius: 5px; /* Скругление углов поля */
+        background-color: #2a2a2a; /* Темный фон для поля */
+        color: #e0e0e0; /* Светлый текст */
+        transition: border-color 0.3s; /* Плавный переход */
+    }
+
+    /* Эффект при фокусе на поле поиска */
+    .form-control:focus {
+        border-color: #ffc107; /* Желтая рамка при фокусе */
+        outline: none; /* Убираем стандартный обвод */
+    }
+
+    /* Стили для кнопок поиска */
+    .btn-primary {
+        padding: 10px 15px; /* Отступы внутри кнопок */
+        border: none; /* Убираем рамку */
+        border-radius: 5px; /* Скругление углов */
+        background-color: #4caf50; /* Зеленый цвет фона */
+        color: white; /* Цвет текста */
+        cursor: pointer; /* Указатель при наведении */
+        font-family: 'Poppins', sans-serif; /* Шрифт для кнопок */
+        font-weight: 600; /* Жирный текст */
+        transition: background-color 0.3s, transform 0.3s; /* Плавный переход */
+    }
+
+    /* Эффект при наведении на кнопки */
+    .btn-primary:hover {
+        background-color: #45a049; /* Темнее при наведении */
+    }
+
+    /* Стили для списка новостей */
+    .news-list {
+        margin-top: 20px; /* Отступ сверху */
+    }
+
+    /* Стили для отдельных элементов новостей */
+    .news-item {
+        background-color: #2a2a2a; /* Темный фон для элемента */
+        border: 1px solid #444; /* Темная рамка */
+        border-radius: 8px; /* Скругление углов */
+        padding: 15px; /* Отступы внутри элемента */
+        margin-bottom: 20px; /* Отступ между элементами */
+        transition: background-color 0.3s; /* Плавный переход */
+    }
+
+    /* Эффект при наведении на элемент новости */
+    .news-item:hover {
+        background-color: #3a3a3a; /* Светлее при наведении */
+    }
+
+    /* Стили для заголовков новостей */
+    .news-item h4 {
+        color: #ffc107; /* Желтый цвет для заголовков новостей */
+        margin-bottom: 5px; /* Отступ снизу */
+    }
+
+    /* Стили для ссылок */
+    .news-item a {
+        display: inline-block; /* Чтобы кнопка была на отдельной строке */
+        margin-top: 10px; /* Отступ сверху */
+        color: #ff8c00; /* Оранжевый цвет для ссылок */
+        text-decoration: none; /* Убираем подчеркивание */
+    }
+
+    /* Эффект при наведении на ссылки */
+    .news-item a:hover {
+        text-decoration: underline; /* Подчеркивание при наведении */
+    }
+
+
+</style>
